@@ -26,24 +26,40 @@ class Floor:
 	def add_wall(self, wall, location):
 		self.walls.append({'wall': wall, 'location': location})
 		
-	def add_l_wall(self, relative):
-		s = (self.length, self.wall, self.height)
-		l = (0, (self.width-self.wall)/2*relative, 0)
+	def add_l_wall(self, relative, size=(-1,1), wall=None):
+		wall = self.wall if wall is None else wall
+	
+		s = (self.length*(size[1]-size[0])/2, wall, self.height)
+		l = (self.length*(size[1]+size[0])/4, (self.width-wall)/2*relative, 0)
 		w = Wall(size=s)
 		self.walls.append({'wall': w, 'location': l})
 		return w
 		
-	def add_w_wall(self, relative):
-		s = (self.wall, self.width, self.height)
-		l = ((self.length-self.wall)/2*relative, 0, 0)
+	def add_w_wall(self, relative, size=(-1,1), wall=None):
+		wall = self.wall if wall is None else wall
+	
+		s = (wall, self.width*(size[1]-size[0])/2, self.height)
+		l = ((self.length-wall)/2*relative, self.width*(size[1]+size[0])/4, 0)
 		w = Wall(size=s)
 		self.walls.append({'wall': w, 'location': l})
 		return w
+		
+	def add_w_walls(self, relative, sizes, wall=None):
+		wall = self.wall if wall is None else wall
+		
+		for size in sizes:
+			self.add_w_wall(relative, size, wall)
+			
+	def add_l_walls(self, relative, sizes, wall=None):
+		wall = self.wall if wall is None else wall
+	
+		for size in sizes:
+			self.add_l_wall(relative, size, wall)
 	
 
 class House:
 
-	def __init__(self, length=9, width=6, plate=0.2, height=3, wall=0.5, floors=1, plate_dw=-0.1):
+	def __init__(self, length=9, width=6, plate=0.2, height=3, wall=0.5, floors=1, plate_dw=-0.1, generate=False):
 		self.length = length
 		self.width = width
 		self.plate = plate
@@ -59,18 +75,17 @@ class House:
 			l_walls = [ f.add_l_wall(-1), f.add_l_wall(1) ]
 			r_walls = [ f.add_w_wall(-1), f.add_w_wall(1) ]
 			
-			l_window_size = (2.08, self.wall, 1.42)
-			r_window_size = (self.wall, 2.08, 1.42)
-			
-			for w in l_walls:
-				for i in (1, 0, -1):
-					location = (i*self.length/3, 0, 0)
-					w.add_hole(size=l_window_size, location=location)
-			
-			for w in r_walls:
-				for i in (1, 0, -1):
-					location = (0, i*self.width/3, 0)
-					w.add_hole(size=r_window_size, location=location)
+			if generate:
+				l_window_size = (2.08, self.wall, 1.42)
+				r_window_size = (self.wall, 2.08, 1.42)
+				
+				for w in l_walls:
+					for i in (1, 0, -1):
+						w.add_hole(size=l_window_size, location=(i*self.length/3, 0, 0))
+				
+				for w in r_walls:
+					for i in (1, 0, -1):
+						w.add_hole(size=r_window_size, location=(0, i*self.width/3, 0))
 			
 			self.o_floors[n_floor] = {
 				'floor': f,
@@ -192,14 +207,19 @@ class HouseBlender():
 
 	
 h_params = {
-	'length': 12,
-	'width': 12,
-	'wall': 0.375,
-	'height': 2.75,
-	'floors': 2,
+	'length': 10.5,
+	'width': 12.5,
+	'wall': 0.4,
+	'height': 3,
+	'floors': 1,
 }
 
-H = House(**h_params)
+H = House(generate=True, **h_params)
+
+H.o_floors[1]['floor'].add_w_walls(0, [(-1,-0.8), (-0.6,-0.55), (-0.33, 0.1), (0.33,1)], 0.2)
+H.o_floors[1]['floor'].add_w_walls(-0.5, [(-1, -0.9), (-0.8, 0.13)], 0.2)
+H.o_floors[1]['floor'].add_l_walls(0.33, [(-1,-0.9), (-0.8, 0), (0.3, 0.4), (0.85, 1)], 0.2)
+H.o_floors[1]['floor'].add_l_walls(-0.33,[(-1, -0.5), (0, 0.1), (0.3, 1)], 0.2)
 
 bpy_add_cube(name='human', scale=(0.6/2, 0.2/2, 1.78/2), location=(0, 0, 1.78/2+H.plate))
 bpy_add_cube(name='ground', scale=(15,15,B_E), location=(0,0,0))
