@@ -12,11 +12,33 @@ class Wall:
 		
 
 class Floor:
-	def __init__(self):
+	def __init__(self, length, width, height, wall):
+		self.length = length
+		self.width = width
+		self.height = height
+		self.wall = wall
 		self.walls = []
+		
+		w = Wall(size=(1,1,1))
+		w.add_hole(size=(1,1,1), location=(0,0,0))
+		self.add_wall(wall=w, location=(0,0,0))
 		
 	def add_wall(self, wall, location):
 		self.walls.append({'wall': wall, 'location': location})
+		
+	def add_l_wall(self, relative):
+		s = (self.length, self.wall, self.height)
+		l = (0, (self.width-self.wall)/2*relative, 0)
+		w = Wall(size=s)
+		self.walls.append({'wall': w, 'location': l})
+		return w
+		
+	def add_w_wall(self, relative):
+		s = (self.wall, self.width, self.height)
+		l = ((self.length-self.wall)/2*relative, 0, 0)
+		w = Wall(size=s)
+		self.walls.append({'wall': w, 'location': l})
+		return w
 	
 
 class House:
@@ -32,28 +54,23 @@ class House:
 		
 		self.o_floors = {}
 		for n_floor in range(1, floors+1):
-			w = Wall(size=(self.length, self.width, self.height))
-			w.add_hole(
-				size=(self.length-2*self.wall, self.width-2*self.wall, self.height),
-				location=(0,0,0)
-				)
+			f = Floor(length=length, width=width, height=height, wall=wall)
 			
-			for j in ((-1,0), (1,0), (0,-1), (0,1)):
-				size = (
-					2.08*abs(j[0]) + (self.wall+B_E)*abs(j[1]),
-					(self.wall+B_E)*abs(j[0]) + 2.08*abs(j[1]),
-					1.42,
-				)
-				for i in (1,0,-1):
-					location = (
-						(i*self.length/3)*abs(j[0]) + (self.length/2-self.wall/2)*j[1], 
-						(self.width/2-self.wall/2)*j[0] + (i*self.length/3)*abs(j[1]),
-						0
-					)
-					w.add_hole(size=size, location=location)
+			l_walls = [ f.add_l_wall(-1), f.add_l_wall(1) ]
+			r_walls = [ f.add_w_wall(-1), f.add_w_wall(1) ]
 			
-			f = Floor()
-			f.add_wall(wall=w, location=(0,0,0))
+			l_window_size = (2.08, self.wall, 1.42)
+			r_window_size = (self.wall, 2.08, 1.42)
+			
+			for w in l_walls:
+				for i in (1, 0, -1):
+					location = (i*self.length/3, 0, 0)
+					w.add_hole(size=l_window_size, location=location)
+			
+			for w in r_walls:
+				for i in (1, 0, -1):
+					location = (0, i*self.width/3, 0)
+					w.add_hole(size=r_window_size, location=location)
 			
 			self.o_floors[n_floor] = {
 				'floor': f,
@@ -66,18 +83,7 @@ class House:
 	
 	def get_plate_location(self, floor):
 		return (0, 0, self.plate/2 + floor*(self.plate+self.height) )
-		
-	@property
-	def walls_scale(self):
-		return (self.length/2, self.width/2, self.height/2)
-		
-	def get_walls_location(self, floor):
-		return (0, 0, self.plate+self.height/2 + floor*(self.plate+self.height) )
-		
-	@property
-	def walls_delta(self):
-		return (H.wall, H.wall, 0)
-		
+				
 		
 def bpy_add_cube(scale, location, name=None):
 	bpy.ops.mesh.primitive_cube_add(location=location)
@@ -87,16 +93,6 @@ def bpy_add_cube(scale, location, name=None):
 	bco.scale = scale
 	return bco
 
-def bpy_add_empty_cube(scale, location, delta, name=None):
-	object = bpy_add_cube(name=name, scale=scale, location=location)
-	hole_scale = (
-		scale[0]-delta[0]+B_E,
-		scale[1]-delta[1]+B_E,
-		scale[2]-delta[2]+B_E,
-	)
-	deleter = bpy_add_cube(scale=hole_scale, location=location)
-	bpy_obj_minus_obj(object=object, deleter=deleter)
-	return object
 	
 def bpy_obj_minus_obj(object, deleter, delete_deleter=True):
 	mod_bool = object.modifiers.new('modifier', 'BOOLEAN')
@@ -109,18 +105,15 @@ def bpy_obj_minus_obj(object, deleter, delete_deleter=True):
 	if delete_deleter:
 		deleter.select = True
 		bpy.ops.object.delete()
-		
-def bpy_obj_plus_obj(object, addition, delete_addition=True):
-	mod_bool = object.modifiers.new('modifier', 'BOOLEAN')
-	mod_bool.operation = 'UNION'
-	mod_bool.object = addition
-	
-	bpy.context.scene.objects.active = object
-	bpy.ops.object.modifier_apply(modifier = 'modifier')
 
-	if delete_addition:
-		addition.select = True
-		bpy.ops.object.delete()
+
+def bpy_obj_plus_obj(object, addition):
+	obs = [object, addition]
+	ctx = bpy.context.copy()
+	ctx['active_object'] = obs[0]
+	ctx['selected_objects'] = obs
+	ctx['selected_editable_bases'] = [bpy.context.scene.object_bases[ob.name] for ob in obs]
+	bpy.ops.object.join(ctx)
 
 		
 class WallBlender:
