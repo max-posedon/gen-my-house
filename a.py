@@ -230,15 +230,20 @@ h_params = {
 	'width': 12.5,
 	'wall': 0.4,
 	'height': 3,
-	'floors': 1,
+	'floors': 2,
 }
 
 H = House(generate=True, **h_params)
 
-H.o_floors[1]['floor'].add_w_walls(0, [(-1,-0.8), (-0.6,-0.55), (-0.33, 0.1), (0.33,1)], 0.2)
-H.o_floors[1]['floor'].add_w_walls(-0.5, [(-1, -0.9), (-0.8, 0.13)], 0.2)
-H.o_floors[1]['floor'].add_l_walls(0.33, [(-1,-0.9), (-0.8, 0), (0.3, 0.4), (0.85, 1)], 0.2)
-H.o_floors[1]['floor'].add_l_walls(-0.33,[(-1, -0.5), (0, 0.1), (0.3, 1)], 0.2)
+H.o_floors[1]['floor'].add_w_walls(0, [(-1,-0.8), (-0.6,-0.55), (-0.33, 0.1), (0.33,1)], 0.3)
+H.o_floors[1]['floor'].add_w_walls(-0.5, [(-1, -0.9), (-0.8, 0.13)], 0.3)
+H.o_floors[1]['floor'].add_l_walls(0.33, [(-1,-0.9), (-0.7, 0), (0.3, 0.4), (0.85, 1)], 0.3)
+H.o_floors[1]['floor'].add_l_walls(-0.33,[(-1, -0.5), (0, 0.1), (0.3, 1)], 0.3)
+
+H.o_floors[2]['floor'].add_w_walls(-0.5, [(-0.5, 0.13), (0.3, 0.33)], 0.2)
+H.o_floors[2]['floor'].add_w_walls(0, [(-1,-0.33), (0.33,1)], 0.2)
+H.o_floors[2]['floor'].add_l_walls(0.33, [(-1, -0.3), (-0.1,0.1), (0.3, 1)], 0.2)
+H.o_floors[2]['floor'].add_l_walls(-0.33, [(-1, -0.5), (0,0.1), (0.3, 1)], 0.2)
 
 bpy_add_cube(name='human', scale=(0.6/2, 0.2/2, 1.78/2), location=(0, 0, 1.78/2+H.plate))
 bpy_add_cube(name='ground', scale=(15,15,B_E), location=(0,0,0))
