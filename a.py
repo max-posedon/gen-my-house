@@ -1,6 +1,6 @@
 import bpy
 
-B_E = 0.01
+B_E = 0.001
 
 class Wall:
 	def __init__(self, size=(1,1,1)):
@@ -23,23 +23,42 @@ class Floor:
 		w.add_hole(size=(1,1,1), location=(0,0,0))
 		self.add_wall(wall=w, location=(0,0,0))
 		
+	@property
+	def in_length(self):
+		return self.length-2*self.wall
+		
+	@property
+	def in_width(self):
+		return self.width-2*self.wall
+
+		
 	def add_wall(self, wall, location):
 		self.walls.append({'wall': wall, 'location': location})
 		
-	def add_l_wall(self, relative, size=(-1,1), wall=None):
+	def add_l_wall(self, relative, size=(-1,1), wall=None, internal=True):
 		wall = self.wall if wall is None else wall
-	
-		s = (self.length*(size[1]-size[0])/2, wall, self.height)
-		l = (self.length*(size[1]+size[0])/4, (self.width-wall)/2*relative, 0)
+
+		if internal:
+			s = (self.in_length*(size[1]-size[0])/2, wall, self.height)
+			l = (self.in_length*(size[1]+size[0])/4, self.in_width/2*relative, 0)
+		else:
+			s = (self.length*(size[1]-size[0])/2, wall, self.height)
+			l = (self.length*(size[1]+size[0])/4, (self.width-wall)/2*relative, 0)	
+		
 		w = Wall(size=s)
 		self.walls.append({'wall': w, 'location': l})
 		return w
 		
-	def add_w_wall(self, relative, size=(-1,1), wall=None):
+	def add_w_wall(self, relative, size=(-1,1), wall=None, internal=True):
 		wall = self.wall if wall is None else wall
 	
-		s = (wall, self.width*(size[1]-size[0])/2, self.height)
-		l = ((self.length-wall)/2*relative, self.width*(size[1]+size[0])/4, 0)
+		if internal:
+			s = (wall, self.in_width*(size[1]-size[0])/2, self.height)
+			l = (self.in_length/2*relative, self.in_width*(size[1]+size[0])/4, 0)
+		else:
+			s = (wall, self.width*(size[1]-size[0])/2, self.height)
+			l = ((self.length-wall)/2*relative, self.width*(size[1]+size[0])/4, 0)
+		
 		w = Wall(size=s)
 		self.walls.append({'wall': w, 'location': l})
 		return w
@@ -72,8 +91,8 @@ class House:
 		for n_floor in range(1, floors+1):
 			f = Floor(length=length, width=width, height=height, wall=wall)
 			
-			l_walls = [ f.add_l_wall(-1), f.add_l_wall(1) ]
-			r_walls = [ f.add_w_wall(-1), f.add_w_wall(1) ]
+			l_walls = [ f.add_l_wall(-1, internal=False), f.add_l_wall(1, internal=False) ]
+			r_walls = [ f.add_w_wall(-1, internal=False), f.add_w_wall(1, internal=False) ]
 			
 			if generate:
 				l_window_size = (2.08, self.wall, 1.42)
