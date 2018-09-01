@@ -4,12 +4,28 @@ B_E = 0.001
 
 class Wall:
 	def __init__(self, size=(1,1,1)):
-		self.size = size
+		self.length = size[0]
+		self.width = size[1]
+		self.height = size[2]
 		self.holes = []
+		
+	@property
+	def size(self):
+		return (self.length, self.width, self.height)
 		
 	def add_hole(self, size, location):
 		self.holes.append({'size': size, 'location': location})
 		
+	def add_l_hole(self, relative, length, height, base_height=0):
+		s = (length, self.width, height)
+		l = (self.length/2*relative, 0, base_height+(height-self.height)/2)	
+		return self.add_hole(size=s, location=l)
+		
+	def add_w_hole(self, relative, width, height, base_height=0):
+		s = (self.length, width, height)
+		l = (0, self.width/2*relative, base_height+(height-self.height)/2)	
+		return self.add_hole(size=s, location=l)
+	
 
 class Floor:
 	def __init__(self, length, width, height, wall):
@@ -33,7 +49,7 @@ class Floor:
 
 		
 	def add_wall(self, wall, location):
-		self.walls.append({'wall': wall, 'location': location})
+		return self.walls.append({'wall': wall, 'location': location})
 		
 	def add_l_wall(self, relative, size=(-1,1), wall=None, internal=True):
 		wall = self.wall if wall is None else wall
@@ -95,16 +111,12 @@ class House:
 			r_walls = [ f.add_w_wall(-1, internal=False), f.add_w_wall(1, internal=False) ]
 			
 			if generate:
-				l_window_size = (2.08, self.wall, 1.42)
-				r_window_size = (self.wall, 2.08, 1.42)
-				
 				for w in l_walls:
-					for i in (1, 0, -1):
-						w.add_hole(size=l_window_size, location=(i*self.length/3, 0, 0))
-				
+					for i in (-0.66, 0, 0.66):
+						w.add_l_hole(i, 2.08, 1.42, 0.5)
 				for w in r_walls:
-					for i in (1, 0, -1):
-						w.add_hole(size=r_window_size, location=(0, i*self.width/3, 0))
+					for i in (0.66, 0, -0.66):
+						w.add_w_hole(i, 2.08, 1.42, 0.5)
 			
 			self.o_floors[n_floor] = {
 				'floor': f,
@@ -224,7 +236,26 @@ class HouseBlender():
 		fb = FloorBlender(the_floor['floor'], the_floor['location'], the_name)
 		fb.render()
 
-	
+'''
+h_params = {
+	'length': 12,
+	'width': 12,
+	'wall': 0.4,
+	'height': 3,
+	'floors': 1,
+}
+H = House(generate=True, **h_params)
+w = H.o_floors[1]['floor'].add_l_wall(0.5, (0,1), 0.2)
+w.add_l_hole(0, 1, 2)	
+w.add_l_hole(1, 1, 2)
+w.add_l_hole(-1, 1, 2)
+
+w = H.o_floors[1]['floor'].add_w_wall(0, (-1,1), 0.2)
+w.add_w_hole(0, 1, 2)	
+w.add_w_hole(0.5, 1, 2)
+w.add_w_hole(-0.5, 1, 2)
+'''
+
 h_params = {
 	'length': 10.5,
 	'width': 12.5,
@@ -235,17 +266,39 @@ h_params = {
 
 H = House(generate=True, **h_params)
 
-H.o_floors[1]['floor'].add_w_walls(0, [(-1,-0.8), (-0.6,-0.55), (-0.33, 0.1), (0.33,1)], 0.3)
-H.o_floors[1]['floor'].add_w_walls(-0.5, [(-1, -0.9), (-0.8, 0.13)], 0.3)
-H.o_floors[1]['floor'].add_l_walls(0.33, [(-1,-0.9), (-0.7, 0), (0.3, 0.4), (0.85, 1)], 0.3)
-H.o_floors[1]['floor'].add_l_walls(-0.33,[(-1, -0.5), (0, 0.1), (0.3, 1)], 0.3)
+w = H.o_floors[1]['floor'].add_w_wall(0, (-1,1), 0.3)
+w.add_w_hole(-0.8, 1, 2)
+w.add_w_hole(-0.5, 1, 2)
+w.add_w_hole(0.2, 1, 2)
 
-H.o_floors[2]['floor'].add_w_walls(-0.5, [(-0.5, 0.13), (0.3, 0.33)], 0.2)
-H.o_floors[2]['floor'].add_w_walls(0, [(-1,-0.33), (0.33,1)], 0.2)
-H.o_floors[2]['floor'].add_l_walls(0.33, [(-1, -0.3), (-0.1,0.1), (0.3, 1)], 0.2)
-H.o_floors[2]['floor'].add_l_walls(-0.33, [(-1, -0.5), (0,0.1), (0.3, 1)], 0.2)
+w = H.o_floors[1]['floor'].add_w_wall(-0.5, (-1, 0.33), 0.3)
+w.add_w_hole(-0.8, 1, 2)
+w.add_w_hole(0.8, 1, 2)
 
-bpy_add_cube(name='human', scale=(0.6/2, 0.2/2, 1.78/2), location=(0, 0, 1.78/2+H.plate))
+w = H.o_floors[1]['floor'].add_l_wall(0.33, (-1,1), 0.3)
+w.add_l_hole(-0.8, 1, 2)
+w.add_l_hole(0.2, 1.5, 2)
+w.add_l_hole(0.7, 2, 2)
+
+w = H.o_floors[1]['floor'].add_l_wall(-0.33, (-1,1), 0.3)
+w.add_l_hole(-0.25, 2, 2)
+w.add_l_hole(0.2, 1, 2)
+
+H.o_floors[2]['floor'].add_w_walls(0, [(-1,-0.33), (0.33,1)], 0.3)
+
+w = H.o_floors[2]['floor'].add_l_wall(0.33, (-1, 1), 0.3)
+w.add_l_hole(-0.2, 1, 2)
+w.add_l_hole(0.2, 1, 2)
+
+H.o_floors[2]['floor'].add_l_wall(-0.33, (-1, -0.5), 0.3)
+w = H.o_floors[2]['floor'].add_l_wall(-0.33, (0, 1), 0.3)
+w.add_l_hole(-0.6, 1, 2)
+
+w = H.o_floors[2]['floor'].add_w_wall(-0.5, (-0.6, 0.33), 0.3)
+w.add_w_hole(-0.7, 1, 2)
+w.add_w_hole(0.7, 1, 2)
+
+bpy_add_cube(name='human', scale=(0.2/2, 0.5/2, 1.78/2), location=(0, 0, 1.78/2+H.plate))
 bpy_add_cube(name='ground', scale=(15,15,B_E), location=(0,0,0))
 
 HB = HouseBlender(H)
