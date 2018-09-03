@@ -1,3 +1,5 @@
+from enum import Enum
+
 import bpy
 
 B_E = 0.001
@@ -26,13 +28,22 @@ class Wall:
 		l = (0, self.width/2*relative, base_height+(height-self.height)/2)	
 		return self.add_hole(size=s, location=l)
 	
-
+	
 class Floor:
-	def __init__(self, length, width, height, wall):
+	class WallType(Enum):
+		none = 0
+		external = 1
+		internal = 2
+		thin = 3
+		
+
+	def __init__(self, length, width, height, external_wall, internal_wall, thin_wall):
 		self.length = length
 		self.width = width
 		self.height = height
-		self.wall = wall
+		self.external_wall = external_wall
+		self.internal_wall = internal_wall
+		self.thin_wall = thin_wall
 		self.walls = []
 		
 		w = Wall(size=(1,1,1))
@@ -41,74 +52,86 @@ class Floor:
 		
 	@property
 	def in_length(self):
-		return self.length-2*self.wall
+		return self.length-2*self.external_wall
 		
 	@property
 	def in_width(self):
-		return self.width-2*self.wall
+		return self.width-2*self.external_wall
+		
+	def wall(self, wall_type=WallType.none):
+		if wall_type == Floor.WallType.external:
+			return self.external_wall
+		elif wall_type == Floor.WallType.internal:
+			return self.internal_wall
+		elif wall_type == Floor.WallType.thin:
+			return self.thin_wall
+		else:
+			raise NotImplementedError
 
 		
 	def add_wall(self, wall, location):
 		return self.walls.append({'wall': wall, 'location': location})
 		
-	def add_l_wall(self, relative, size=(-1,1), wall=None, internal=True):
-		wall = self.wall if wall is None else wall
+	def add_l_wall(self, relative, size=(-1,1), wall_type=WallType.internal):
+		wall = self.wall(wall_type)
 
-		if internal:
+		if wall_type == Floor.WallType.internal or wall_type == Floor.WallType.thin:
 			s = (self.in_length*(size[1]-size[0])/2, wall, self.height)
 			l = (self.in_length*(size[1]+size[0])/4, self.in_width/2*relative, 0)
-		else:
+		elif wall_type == Floor.WallType.external:
 			s = (self.length*(size[1]-size[0])/2, wall, self.height)
 			l = (self.length*(size[1]+size[0])/4, (self.width-wall)/2*relative, 0)	
+		else:
+			raise NotImplementedError
 		
 		w = Wall(size=s)
 		self.walls.append({'wall': w, 'location': l})
 		return w
 		
-	def add_w_wall(self, relative, size=(-1,1), wall=None, internal=True):
-		wall = self.wall if wall is None else wall
+	def add_w_wall(self, relative, size=(-1,1), wall_type=WallType.internal):
+		wall = self.wall(wall_type)
 	
-		if internal:
+		if wall_type == Floor.WallType.internal or wall_type == Floor.WallType.thin:
 			s = (wall, self.in_width*(size[1]-size[0])/2, self.height)
 			l = (self.in_length/2*relative, self.in_width*(size[1]+size[0])/4, 0)
-		else:
+		elif wall_type == Floor.WallType.external:
 			s = (wall, self.width*(size[1]-size[0])/2, self.height)
 			l = ((self.length-wall)/2*relative, self.width*(size[1]+size[0])/4, 0)
+		else:
+			raise NotImplementedError
 		
 		w = Wall(size=s)
 		self.walls.append({'wall': w, 'location': l})
 		return w
 		
-	def add_w_walls(self, relative, sizes, wall=None):
-		wall = self.wall if wall is None else wall
-		
+	def add_w_walls(self, relative, sizes, wall_type=WallType.internal):
 		for size in sizes:
-			self.add_w_wall(relative, size, wall)
+			self.add_w_wall(relative, size, wall_type)
 			
-	def add_l_walls(self, relative, sizes, wall=None):
-		wall = self.wall if wall is None else wall
-	
+	def add_l_walls(self, relative, sizes, wall_type=WallType.internal):
 		for size in sizes:
-			self.add_l_wall(relative, size, wall)
+			self.add_l_wall(relative, size, wall_type)
 	
 
 class House:
 
-	def __init__(self, length=9, width=6, plate=0.2, height=3, wall=0.5, floors=1, plate_dw=-0.1, generate=False):
+	def __init__(self, length=9, width=6, plate=0.2, height=3, external_wall=0.4, internal_wall=0.2, thin_wall=0.1, floors=1, plate_dw=-0.1, generate=False):
 		self.length = length
 		self.width = width
 		self.plate = plate
 		self.height = height
-		self.wall = wall
+		self.external_wall = external_wall
+		self.internal_wall = internal_wall
+		self.thin_wall = thin_wall
 		self.plate_dw = plate_dw
 		self.floors = floors
 		
 		self.o_floors = {}
 		for n_floor in range(1, floors+1):
-			f = Floor(length=length, width=width, height=height, wall=wall)
+			f = Floor(length=length, width=width, height=height, external_wall=external_wall, internal_wall=internal_wall, thin_wall=thin_wall)
 			
-			l_walls = [ f.add_l_wall(-1, internal=False), f.add_l_wall(1, internal=False) ]
-			r_walls = [ f.add_w_wall(-1, internal=False), f.add_w_wall(1, internal=False) ]
+			l_walls = [ f.add_l_wall(-1, wall_type=Floor.WallType.external), f.add_l_wall(1, wall_type=Floor.WallType.external) ]
+			r_walls = [ f.add_w_wall(-1, wall_type=Floor.WallType.external), f.add_w_wall(1, wall_type=Floor.WallType.external) ]
 			
 			if generate:
 				for w in l_walls:
@@ -259,42 +282,41 @@ w.add_w_hole(-0.5, 1, 2)
 h_params = {
 	'length': 10.5,
 	'width': 12.5,
-	'wall': 0.4,
 	'height': 3,
 	'floors': 2,
 }
 
 H = House(generate=True, **h_params)
 
-w = H.o_floors[1]['floor'].add_w_wall(0, (-1,1), 0.3)
+w = H.o_floors[1]['floor'].add_w_wall(0, (-1,1))
 w.add_w_hole(-0.8, 1, 2)
 w.add_w_hole(-0.5, 1, 2)
 w.add_w_hole(0.2, 1, 2)
 
-w = H.o_floors[1]['floor'].add_w_wall(-0.5, (-1, 0.33), 0.3)
+w = H.o_floors[1]['floor'].add_w_wall(-0.5, (-1, 0.33))
 w.add_w_hole(-0.8, 1, 2)
 w.add_w_hole(0.8, 1, 2)
 
-w = H.o_floors[1]['floor'].add_l_wall(0.33, (-1,1), 0.3)
+w = H.o_floors[1]['floor'].add_l_wall(0.33, (-1,1))
 w.add_l_hole(-0.8, 1, 2)
 w.add_l_hole(0.2, 1.5, 2)
 w.add_l_hole(0.7, 2, 2)
 
-w = H.o_floors[1]['floor'].add_l_wall(-0.33, (-1,1), 0.3)
+w = H.o_floors[1]['floor'].add_l_wall(-0.33, (-1,1))
 w.add_l_hole(-0.25, 2, 2)
 w.add_l_hole(0.2, 1, 2)
 
-H.o_floors[2]['floor'].add_w_walls(0, [(-1,-0.33), (0.33,1)], 0.3)
+H.o_floors[2]['floor'].add_w_walls(0, [(-1,-0.33), (0.33,1)])
 
-w = H.o_floors[2]['floor'].add_l_wall(0.33, (-1, 1), 0.3)
+w = H.o_floors[2]['floor'].add_l_wall(0.33, (-1, 1))
 w.add_l_hole(-0.2, 1, 2)
 w.add_l_hole(0.2, 1, 2)
 
-H.o_floors[2]['floor'].add_l_wall(-0.33, (-1, -0.5), 0.3)
-w = H.o_floors[2]['floor'].add_l_wall(-0.33, (0, 1), 0.3)
+H.o_floors[2]['floor'].add_l_wall(-0.33, (-1, -0.5))
+w = H.o_floors[2]['floor'].add_l_wall(-0.33, (0, 1))
 w.add_l_hole(-0.6, 1, 2)
 
-w = H.o_floors[2]['floor'].add_w_wall(-0.5, (-0.6, 0.33), 0.3)
+w = H.o_floors[2]['floor'].add_w_wall(-0.5, (-0.6, 0.33))
 w.add_w_hole(-0.7, 1, 2)
 w.add_w_hole(0.7, 1, 2)
 
