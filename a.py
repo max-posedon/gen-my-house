@@ -33,6 +33,12 @@ class Wall:
 		s = (self.length, width, height)
 		l = (0, self.width/2*relative, base_height+(height-self.height)/2)	
 		return self.add_hole(size=s, location=l)
+		
+
+class TheWall:
+	def __init__(self, wall, location=(0,0,0)):
+		self.wall = wall
+		self.location = location
 	
 	
 class Floor:
@@ -76,7 +82,7 @@ class Floor:
 
 		
 	def add_wall(self, wall, location):
-		return self.walls.append({'wall': wall, 'location': location})
+		return self.walls.append(TheWall(wall=wall, location=location))
 		
 	def add_l_wall(self, relative, size=(-1,1), wall_type=WallType.internal):
 		wall = self.wall(wall_type)
@@ -91,7 +97,7 @@ class Floor:
 			raise NotImplementedError
 		
 		w = Wall(size=s)
-		self.walls.append({'wall': w, 'location': l})
+		self.add_wall(wall=w, location=l)
 		return w
 		
 	def add_w_wall(self, relative, size=(-1,1), wall_type=WallType.internal):
@@ -107,7 +113,7 @@ class Floor:
 			raise NotImplementedError
 		
 		w = Wall(size=s)
-		self.walls.append({'wall': w, 'location': l})
+		self.add_wall(wall=w, location=l)
 		return w
 		
 	def add_w_walls(self, relative, sizes, wall_type=WallType.internal):
@@ -224,7 +230,7 @@ class FloorBlender:
 	def render(self):
 		first = None
 		for the_wall in self.floor.walls:
-			wb = WallBlender(wall=the_wall['wall'], location=the_wall['location'])
+			wb = WallBlender(wall=the_wall.wall, location=the_wall.location)
 			wb.render()
 			if first is None:
 				first = wb.b_wall
