@@ -123,6 +123,12 @@ class Floor:
 	def add_l_walls(self, relative, sizes, wall_type=WallType.internal):
 		for size in sizes:
 			self.add_l_wall(relative, size, wall_type)
+			
+
+class TheFloor:
+	def __init__(self, floor, location=(0,0,0)):
+		self.floor = floor
+		self.location = location
 	
 
 class House:
@@ -138,7 +144,7 @@ class House:
 		self.plate_dw = plate_dw
 		self.floors = floors
 		
-		self.o_floors = {}
+		self.the_floors = {}
 		for n_floor in range(1, floors+1):
 			f = Floor(length=length, width=width, height=height, external_wall=external_wall, internal_wall=internal_wall, thin_wall=thin_wall)
 			
@@ -153,10 +159,10 @@ class House:
 					for i in (0.66, 0, -0.66):
 						w.add_w_hole(i, 2.08, 1.42, 0.5)
 			
-			self.o_floors[n_floor] = {
-				'floor': f,
-				'location': (0, 0, self.plate*n_floor+self.height*(n_floor-0.5)),
-			}
+			self.the_floors[n_floor] = TheFloor(
+				floor=f, 
+				location=(0, 0, self.plate*n_floor+self.height*(n_floor-0.5))
+				)
 	
 	@property
 	def plate_scale(self):
@@ -265,10 +271,10 @@ class HouseBlender():
 	
 	def render_walls(self):
 		for n_floor in range(1, self.house.floors+1):
-			self.render_walls_floor(self.house.o_floors[n_floor], 'floor%i' % (n_floor))
+			self.render_walls_floor(self.house.the_floors[n_floor], 'floor%i' % (n_floor))
 					
 	def render_walls_floor(self, the_floor, the_name):
-		fb = FloorBlender(the_floor['floor'], the_floor['location'], the_name)
+		fb = FloorBlender(the_floor.floor, the_floor.location, the_name)
 		fb.render()
 
 '''
@@ -280,12 +286,12 @@ h_params = {
 	'floors': 1,
 }
 H = House(generate=True, **h_params)
-w = H.o_floors[1]['floor'].add_l_wall(0.5, (0,1), 0.2)
+w = H.the_floors[1].floor.add_l_wall(0.5, (0,1), 0.2)
 w.add_l_hole(0, 1, 2)	
 w.add_l_hole(1, 1, 2)
 w.add_l_hole(-1, 1, 2)
 
-w = H.o_floors[1]['floor'].add_w_wall(0, (-1,1), 0.2)
+w = H.the_floors[1].floor.add_w_wall(0, (-1,1), 0.2)
 w.add_w_hole(0, 1, 2)	
 w.add_w_hole(0.5, 1, 2)
 w.add_w_hole(-0.5, 1, 2)
@@ -300,35 +306,35 @@ h_params = {
 
 H = House(generate=True, **h_params)
 
-w = H.o_floors[1]['floor'].add_w_wall(0, (-1,1))
+w = H.the_floors[1].floor.add_w_wall(0, (-1,1))
 w.add_w_hole(-0.8, 1, 2)
 w.add_w_hole(-0.5, 1, 2)
 w.add_w_hole(0.2, 1, 2)
 
-w = H.o_floors[1]['floor'].add_w_wall(-0.5, (-1, 0.33))
+w = H.the_floors[1].floor.add_w_wall(-0.5, (-1, 0.33))
 w.add_w_hole(-0.8, 1, 2)
 w.add_w_hole(0.8, 1, 2)
 
-w = H.o_floors[1]['floor'].add_l_wall(0.33, (-1,1))
+w = H.the_floors[1].floor.add_l_wall(0.33, (-1,1))
 w.add_l_hole(-0.8, 1, 2)
 w.add_l_hole(0.2, 1.5, 2)
 w.add_l_hole(0.7, 2, 2)
 
-w = H.o_floors[1]['floor'].add_l_wall(-0.33, (-1,1))
+w = H.the_floors[1].floor.add_l_wall(-0.33, (-1,1))
 w.add_l_hole(-0.25, 2, 2)
 w.add_l_hole(0.2, 1, 2)
 
-H.o_floors[2]['floor'].add_w_walls(0, [(-1,-0.33), (0.33,1)])
+H.the_floors[2].floor.add_w_walls(0, [(-1,-0.33), (0.33,1)])
 
-w = H.o_floors[2]['floor'].add_l_wall(0.33, (-1, 1))
+w = H.the_floors[2].floor.add_l_wall(0.33, (-1, 1))
 w.add_l_hole(-0.2, 1, 2)
 w.add_l_hole(0.2, 1, 2)
 
-H.o_floors[2]['floor'].add_l_wall(-0.33, (-1, -0.5))
-w = H.o_floors[2]['floor'].add_l_wall(-0.33, (0, 1))
+H.the_floors[2].floor.add_l_wall(-0.33, (-1, -0.5))
+w = H.the_floors[2].floor.add_l_wall(-0.33, (0, 1))
 w.add_l_hole(-0.6, 1, 2)
 
-w = H.o_floors[2]['floor'].add_w_wall(-0.5, (-0.6, 0.33))
+w = H.the_floors[2].floor.add_w_wall(-0.5, (-0.6, 0.33))
 w.add_w_hole(-0.7, 1, 2)
 w.add_w_hole(0.7, 1, 2)
 
