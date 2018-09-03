@@ -4,6 +4,12 @@ import bpy
 
 B_E = 0.001
 
+class Hole:
+	def __init__(self, size, location):
+		self.size = size
+		self.location = location
+
+
 class Wall:
 	def __init__(self, size=(1,1,1)):
 		self.length = size[0]
@@ -16,7 +22,7 @@ class Wall:
 		return (self.length, self.width, self.height)
 		
 	def add_hole(self, size, location):
-		self.holes.append({'size': size, 'location': location})
+		self.holes.append(Hole(size=size, location=location))
 		
 	def add_l_hole(self, relative, length, height, base_height=0):
 		s = (length, self.width, height)
@@ -199,8 +205,8 @@ class WallBlender:
 		
 		for hole in self.wall.holes:
 			h = bpy_add_cube(
-				scale=(hole['size'][0]/2+B_E, hole['size'][1]/2+B_E, hole['size'][2]/2+B_E),
-				location=(hole['location'][0], hole['location'][1], hole['location'][2])
+				scale=(hole.size[0]/2+B_E, hole.size[1]/2+B_E, hole.size[2]/2+B_E),
+				location=(hole.location)
 			)
 			bpy_obj_minus_obj(object=b_wall, deleter=h)
 			
