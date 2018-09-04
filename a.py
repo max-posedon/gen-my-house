@@ -5,24 +5,26 @@ import bpy
 B_E = 0.001
 
 class Hole:
-	def __init__(self, size, location):
+	def __init__(self, size, location, parent):
 		self.size = size
 		self.location = location
+		self.parent = parent
 
 
 class Wall:
-	def __init__(self, size=(1,1,1)):
+	def __init__(self, parent, size=(1,1,1)):
 		self.length = size[0]
 		self.width = size[1]
 		self.height = size[2]
 		self.holes = []
+		self.parent = parent
 		
 	@property
 	def size(self):
 		return (self.length, self.width, self.height)
 		
 	def add_hole(self, size, location):
-		self.holes.append(Hole(size=size, location=location))
+		self.holes.append(Hole(size=size, location=location, parent=self))
 		
 	def add_l_hole(self, relative, length, height, base_height=0):
 		s = (length, self.width, height)
@@ -36,9 +38,10 @@ class Wall:
 		
 
 class TheWall:
-	def __init__(self, wall, location=(0,0,0)):
+	def __init__(self, wall, parent, location=(0,0,0)):
 		self.wall = wall
 		self.location = location
+		self.parent = parent
 	
 	
 class Floor:
@@ -49,16 +52,16 @@ class Floor:
 		thin = 3
 		
 
-	def __init__(self, length, width, height, external_wall, internal_wall, thin_wall):
-		self.length = length
-		self.width = width
-		self.height = height
-		self.external_wall = external_wall
-		self.internal_wall = internal_wall
-		self.thin_wall = thin_wall
+	def __init__(self, parent, length=None, width=None, height=None, external_wall=None, internal_wall=None, thin_wall=None):
+		self.length = length if length else parent.length
+		self.width = width if width else parent.width
+		self.height = height if height else parent.height
+		self.external_wall = external_wall if external_wall else parent.external_wall
+		self.internal_wall = internal_wall if internal_wall else parent.internal_wall
+		self.thin_wall = thin_wall if thin_wall else parent.thin_wall
 		self.walls = []
 		
-		w = Wall(size=(1,1,1))
+		w = Wall(size=(1,1,1), parent=self)
 		w.add_hole(size=(1,1,1), location=(0,0,0))
 		self.add_wall(wall=w, location=(0,0,0))
 		
@@ -82,7 +85,7 @@ class Floor:
 
 		
 	def add_wall(self, wall, location):
-		return self.walls.append(TheWall(wall=wall, location=location))
+		return self.walls.append(TheWall(wall=wall, location=location, parent=self))
 		
 	def add_l_wall(self, relative, size=(-1,1), wall_type=WallType.internal):
 		wall = self.wall(wall_type)
@@ -96,7 +99,7 @@ class Floor:
 		else:
 			raise NotImplementedError
 		
-		w = Wall(size=s)
+		w = Wall(size=s, parent=self)
 		self.add_wall(wall=w, location=l)
 		return w
 		
@@ -112,7 +115,7 @@ class Floor:
 		else:
 			raise NotImplementedError
 		
-		w = Wall(size=s)
+		w = Wall(size=s, parent=self)
 		self.add_wall(wall=w, location=l)
 		return w
 		
@@ -126,14 +129,18 @@ class Floor:
 			
 
 class TheFloor:
-	def __init__(self, floor, location=(0,0,0)):
+	def __init__(self, floor, parent, location=(0,0,0)):
 		self.floor = floor
 		self.location = location
 	
 
 class House:
 
-	def __init__(self, length=9, width=6, plate=0.2, height=3, external_wall=0.4, internal_wall=0.2, thin_wall=0.1, floors=1, plate_dw=-0.1, generate=False):
+	def __init__(self, 
+			length=9, width=6, height=3, plate=0.2, plate_dw=-0.1, floors=1,
+			external_wall=0.4, internal_wall=0.2, thin_wall=0.1,
+			window_length = 2.08, window_height = 1.42, window_base = 0.5,
+			generate=False):
 		self.length = length
 		self.width = width
 		self.plate = plate
@@ -143,25 +150,35 @@ class House:
 		self.thin_wall = thin_wall
 		self.plate_dw = plate_dw
 		self.floors = floors
+		self.window_length = window_length
+		self.window_height = window_height
+		self.window_base = window_base
 		
 		self.the_floors = {}
 		for n_floor in range(1, floors+1):
-			f = Floor(length=length, width=width, height=height, external_wall=external_wall, internal_wall=internal_wall, thin_wall=thin_wall)
+			f = Floor(parent=self)
 			
-			l_walls = [ f.add_l_wall(-1, wall_type=Floor.WallType.external), f.add_l_wall(1, wall_type=Floor.WallType.external) ]
-			r_walls = [ f.add_w_wall(-1, wall_type=Floor.WallType.external), f.add_w_wall(1, wall_type=Floor.WallType.external) ]
+			l_walls = [
+				f.add_l_wall(-1, wall_type=Floor.WallType.external),
+				f.add_l_wall(1, wall_type=Floor.WallType.external)
+				]
+			r_walls = [
+				f.add_w_wall(-1, wall_type=Floor.WallType.external),
+				f.add_w_wall(1, wall_type=Floor.WallType.external)
+				]
 			
 			if generate:
 				for w in l_walls:
 					for i in (-0.66, 0, 0.66):
-						w.add_l_hole(i, 2.08, 1.42, 0.5)
+						w.add_l_hole(i, self.window_length, self.window_height, self.window_base)
 				for w in r_walls:
 					for i in (0.66, 0, -0.66):
-						w.add_w_hole(i, 2.08, 1.42, 0.5)
+						w.add_w_hole(i, self.window_height, self.window_height, self.window_base)
 			
 			self.the_floors[n_floor] = TheFloor(
 				floor=f, 
-				location=(0, 0, self.plate*n_floor+self.height*(n_floor-0.5))
+				location=(0, 0, self.plate*n_floor+self.height*(n_floor-0.5)),
+				parent=self
 				)
 	
 	@property
