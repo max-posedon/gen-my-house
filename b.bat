@@ -1,0 +1,1 @@
+"C:\Program Files\Blender Foundation\Blender\blender.exe" a.blend -P b.py
