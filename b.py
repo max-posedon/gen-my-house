@@ -5,24 +5,50 @@ class House:
 		def __init__(self, height, shift):
 			self.height = height
 			self.shift = shift
+
+	class Overlap:
+		def __init__(self, height, shift, altitude):
+			self.height = height
+			self.shift = shift
+			self.altitude = altitude
 			
 	class Floor:
-		def __init__(self, height):
+		class Wall:
+			def __init__(self):
+				pass
+	
+		def __init__(self, height, thickness, altitude):
 			self.height = height
-
+			self.thickness = thickness
+			self.altitude = altitude
+			self.walls = []
+			
+		def add_wall(self, thickness):
+			pass
+		
 	def __init__(self, width, depth):
 		self.width = width
 		self.depth = depth
 		self.foundation = None
 		self.floors = []
+		self.overlaps = []
+		self.altitude = 0
 	
 	def add_foundation(self, height, shift):
 		self.foundation = House.Foundation(height, shift)
+		self.altitude += height
 	
-	def add_floor(self, height):
-		floor = House.Floor(height)
+	def add_floor(self, height, thickness):
+		floor = House.Floor(height, thickness, self.altitude)
 		self.floors.append(floor)
+		self.altitude += height
 		return floor
+		
+	def add_overlap(self, height, shift):
+		overlap = House.Overlap(height, shift, self.altitude)
+		self.overlaps.append(overlap)
+		self.altitude += height
+		return overlap
 
 		
 B_E = 0.001
@@ -57,25 +83,51 @@ class BlenderHouse:
 	def render(self):
 		self.render_bounds()
 		self.render_foundation()
+		self.render_floors()
+		self.render_overlaps()
 	
 	def render_bounds(self):
-		h = bpy_add_cube(size=(house.width, house.depth, B_E), location=(0,0,B_E/2), name='bounds')
+		bpy_add_cube(size=(house.width, house.depth, B_E), location=(0,0,B_E/2), name='bounds')
 	
 	def render_foundation(self):
 		if not house.foundation:
 			return
 		
-		h = bpy_add_cube(
-			size=(house.width - house.foundation.shift, house.depth - house.foundation.shift, house.foundation.height), 
+		bpy_add_cube(
+			size=(house.width - 2*house.foundation.shift, house.depth - 2*house.foundation.shift, house.foundation.height), 
 			location=(0,0,house.foundation.height/2), 
 			name='foundation'
+			)
+	
+	def render_floors(self):
+		n = 0
+		for floor in house.floors:
+			n += 1
+			f = bpy_add_cube(
+				size=(house.width, house.depth, floor.height),
+				location=(0,0, floor.altitude+floor.height/2),
+				name='floor%i' % n
+				)
+			e = bpy_add_cube(size=(house.width-2*floor.thickness, house.depth-2*floor.thickness, floor.height+B_E), location=(0,0, floor.altitude+floor.height/2))
+			bpy_obj_minus_obj(f, e)
+	
+	def render_overlaps(self):
+		n = 0
+		for overlap in house.overlaps:
+			n += 1
+			bpy_add_cube(
+				size=(house.width - 2*overlap.shift, house.depth - 2*overlap.shift, overlap.height),
+				location=(0,0,overlap.altitude+overlap.height/2),
+				name='overlap%i' % n
 			)
 
 
 # house configuration
 house = House(width=10.5, depth=12.5)
 house.add_foundation(height=0.2, shift=0.1)
-house.add_floor(height=3)
+house.add_floor(height=3, thickness=0.6)
+house.add_overlap(height=0.2, shift=0.1)
+house.add_floor(height=3, thickness=0.6)
 
 # render ground
 bpy_add_cube(name='ground', size=(30,50,B_E), location=(0,0,-B_E/2))
