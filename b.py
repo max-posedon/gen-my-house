@@ -14,17 +14,37 @@ class House:
 			
 	class Floor:
 		class Wall:
-			def __init__(self):
-				pass
+			def __init__(self, size, location):
+				self.size = size
+				self.location = location
 	
-		def __init__(self, height, thickness, altitude):
+		def __init__(self, height, thickness, altitude, width, depth):
 			self.height = height
 			self.thickness = thickness
 			self.altitude = altitude
+			self.width = width
+			self.depth = depth
 			self.walls = []
 			
-		def add_wall(self, thickness):
-			pass
+			self.add_w_wall((-1,1), -1, thickness)
+			self.add_w_wall((-1,1), 1, thickness)
+			self.add_d_wall((-1,1), -1, thickness)
+			self.add_d_wall((-1,1), 1, thickness)
+			
+		def add_w_wall(self, relative_width, relative_depth, thickness):
+			size = (self.width*(relative_width[1]-relative_width[0])/2, thickness, self.height)
+			location = ((self.width-self.thickness)*(relative_width[1]+relative_width[0])/4, (self.depth-self.thickness)/2*relative_depth, 0)
+			wall = House.Floor.Wall(size, location)
+			self.walls.append(wall)
+			return wall
+			
+		def add_d_wall(self, relative_depth, relative_width, thickness):
+			size = (thickness, self.depth*(relative_depth[1]-relative_depth[0])/2, self.height)
+			location = ((self.width-self.thickness)/2*relative_width, (self.width-self.thickness)*(relative_depth[1]+relative_depth[0])/4, 0)
+			wall = House.Floor.Wall(size, location)
+			self.walls.append(wall)
+			return wall
+			
 		
 	def __init__(self, width, depth):
 		self.width = width
@@ -39,7 +59,7 @@ class House:
 		self.altitude += height
 	
 	def add_floor(self, height, thickness):
-		floor = House.Floor(height, thickness, self.altitude)
+		floor = House.Floor(height, thickness, self.altitude, self.width, self.depth)
 		self.floors.append(floor)
 		self.altitude += height
 		return floor
@@ -74,6 +94,14 @@ def bpy_obj_minus_obj(object, deleter, delete_deleter=True):
 	if delete_deleter:
 		deleter.select = True
 		bpy.ops.object.delete()
+		
+def bpy_obj_plus_obj(object, addition):
+	obs = [object, addition]
+	ctx = bpy.context.copy()
+	ctx['active_object'] = obs[0]
+	ctx['selected_objects'] = obs
+	ctx['selected_editable_bases'] = [bpy.context.scene.object_bases[ob.name] for ob in obs]
+	bpy.ops.object.join(ctx)
 	
 	
 class BlenderHouse:
@@ -104,12 +132,19 @@ class BlenderHouse:
 		for floor in house.floors:
 			n += 1
 			f = bpy_add_cube(
-				size=(house.width, house.depth, floor.height),
+				size=(1, 1, 1),
 				location=(0,0, floor.altitude+floor.height/2),
 				name='floor%i' % n
 				)
-			e = bpy_add_cube(size=(house.width-2*floor.thickness, house.depth-2*floor.thickness, floor.height+B_E), location=(0,0, floor.altitude+floor.height/2))
+			e = bpy_add_cube(size=(1+B_E, 1+B_E, 1+B_E), location=(0,0, floor.altitude+floor.height/2))
 			bpy_obj_minus_obj(f, e)
+			
+			for wall in floor.walls:
+				w = bpy_add_cube(
+					size=wall.size,
+					location=(wall.location[0], wall.location[1], floor.altitude + wall.size[2]/2)
+					)
+				bpy_obj_plus_obj(f, w)
 	
 	def render_overlaps(self):
 		n = 0
@@ -123,11 +158,14 @@ class BlenderHouse:
 
 
 # house configuration
-house = House(width=10.5, depth=12.5)
+house = House(width=10.5+0.6, depth=12.5+0.6)
 house.add_foundation(height=0.2, shift=0.1)
-house.add_floor(height=3, thickness=0.6)
+f1 = house.add_floor(height=3, thickness=0.6)
 house.add_overlap(height=0.2, shift=0.1)
 house.add_floor(height=3, thickness=0.6)
+
+f1.add_w_wall((-1,1), 0, 0.3)
+f1.add_d_wall((-1,1), 0, 0.3)
 
 # render ground
 bpy_add_cube(name='ground', size=(30,50,B_E), location=(0,0,-B_E/2))
