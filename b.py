@@ -33,14 +33,14 @@ class House:
 			
 		def add_w_wall(self, relative_width, relative_depth, thickness):
 			size = (self.width*(relative_width[1]-relative_width[0])/2, thickness, self.height)
-			location = ((self.width-self.thickness)*(relative_width[1]+relative_width[0])/4, (self.depth-self.thickness)/2*relative_depth, 0)
+			location = (self.width*(relative_width[1]+relative_width[0])/4, (self.depth-2*thickness+self.thickness)/2*relative_depth, 0)
 			wall = House.Floor.Wall(size, location)
 			self.walls.append(wall)
 			return wall
 			
 		def add_d_wall(self, relative_depth, relative_width, thickness):
 			size = (thickness, self.depth*(relative_depth[1]-relative_depth[0])/2, self.height)
-			location = ((self.width-self.thickness)/2*relative_width, (self.width-self.thickness)*(relative_depth[1]+relative_depth[0])/4, 0)
+			location = ((self.width-2*thickness+self.thickness)/2*relative_width, self.depth*(relative_depth[1]+relative_depth[0])/4, 0)
 			wall = House.Floor.Wall(size, location)
 			self.walls.append(wall)
 			return wall
@@ -164,8 +164,11 @@ f1 = house.add_floor(height=3, thickness=0.6)
 house.add_overlap(height=0.2, shift=0.1)
 house.add_floor(height=3, thickness=0.6)
 
-f1.add_w_wall((-1,1), 0, 0.3)
 f1.add_d_wall((-1,1), 0, 0.3)
+f1.add_d_wall((-1,0.33), -0.5, 0.3)
+f1.add_w_wall((-1,1), 0.33, 0.3)
+f1.add_w_wall((-1,-0.5), -0.33, 0.3)
+f1.add_w_wall((0,1), -0.33, 0.3)
 
 # render ground
 bpy_add_cube(name='ground', size=(30,50,B_E), location=(0,0,-B_E/2))
