@@ -236,6 +236,22 @@ f1.add_w2_wall("left", "f1d3", -0.33, IWT, "f1w5")
 
 IWT = 0.3
 
+f1.walls['front'].add_w_hole(-0.8, 1.5, 1, 1)
+f1.walls['front'].add_w_hole(-0.4, 0.5, 1, 1)
+f1.walls['front'].add_w_hole(-0.2, 1, 2, 0)
+f1.walls['front'].add_w_hole(0.2, 1, 1, 1)
+f1.walls['front'].add_w_hole(0.7, 2, 1, 1)
+f1.walls['left'].add_d_hole(-0.5, 1, 2, 0)
+f1.walls['left'].add_d_hole(-0.1, 1, 1, 1)
+f1.walls['left'].add_d_hole(0.2, 1, 1, 1)
+f1.walls['left'].add_d_hole(0.6, 2, 1, 1)
+f1.walls['back'].add_w_hole(0.2, 1, 1, 1)
+f1.walls['right'].add_d_hole(0, 2, 1, 1)
+f1.walls['right'].add_d_hole(0.6, 2, 1, 1)
+
+f1.walls['f1d3'].add_d_hole(-0.8, 1, 2, 0)
+f1.walls['f1d3'].add_d_hole(0.8, 1.5, 2, 0)
+
 f2.add_w2_wall("left", "right", 0.33, IWT, "f2w0")
 f2.add_d2_wall("f2w0", "back", 0, IWT, "f2d1")
 f2.add_d_wall((-0.68, 0.3), -0.5, IWT, "f2d2")
@@ -248,7 +264,7 @@ f2.add_d_wall((-1,-0.33), 0, IWT, "f2d6")
 f2.add_w_wall((0,1), -0.33, IWT, "f2w7")
 
 # render ground
-bpy_add_cube(name='ground', size=(30,50,B_E), location=(0,0,-B_E/2))
+bpy_add_cube(name='ground', size=(27,54,B_E), location=(0,0,-B_E/2))
 
 # render house
 hb = BlenderHouse(house)
