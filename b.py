@@ -55,24 +55,6 @@ class House:
 				location = (0, self.size[1]/2*relative_depth, base_height+(height-self.size[2])/2)
 				return self.add_hole(size, location)
 				
-			def add_w2_hole(self, gap, pos, width, height, base_height):
-				size = (width, self.size[1], height)
-				location = (
-					(self.size[0]/2 - gap - width/2)*pos,
-					0,
-					base_height+(height-self.size[2])/2
-					)
-				return self.add_hole(size, location)
-				
-			def add_d2_hole(self, gap, pos, depth, height, base_height):
-				size = (self.size[0], depth, height)
-				location = (
-					0, 
-					(self.size[1]/2 - gap - depth/2)*pos, 
-					base_height+(height-self.size[2])/2
-					)
-				return self.add_hole(size, location)
-			
 			def add_w3_hole(self, gap_wall, gap, pos, width, height, base_height):
 				size = (width, self.size[1], height)
 				if pos > 0:
