@@ -45,16 +45,6 @@ class House:
 				self.holes.append(hole)
 				return hole
 			
-			def add_w_hole(self, relative_width, width, height, base_height):
-				size = (width, self.size[1], height)
-				location = (self.size[0]/2*relative_width, 0, base_height+(height-self.size[2])/2)
-				return self.add_hole(size, location)
-			
-			def add_d_hole(self, relative_depth, depth, height, base_height):
-				size = (self.size[0], depth, height)
-				location = (0, self.size[1]/2*relative_depth, base_height+(height-self.size[2])/2)
-				return self.add_hole(size, location)
-				
 			def add_w3_hole(self, gap_wall, gap, pos, width, height, base_height):
 				size = (width, self.size[1], height)
 				if pos > 0:
@@ -237,7 +227,7 @@ class BlenderHouse:
 
 # house configuration
 house = House(width=10.5+0.6, depth=12.5+0.6)
-house.add_foundation(height=0.2, shift=0.1)
+house.add_foundation(height=0.2, shift=-2)
 f1 = house.add_floor(height=3, thickness=0.6)
 house.add_overlap(height=0.2, shift=0.1)
 f2 = house.add_floor(height=3, thickness=0.6)
@@ -261,18 +251,19 @@ H_WND_XL = (2, 1, 1)
 H_DR_M = (1, 2, 0)
 H_DR_L = (1.5, 2, 0)
 
-f1.walls['front'].add_w_hole(-0.8, *H_WND_L)
-f1.walls['front'].add_w_hole(-0.4, *H_WND_S)
-f1.walls['front'].add_w_hole(-0.2, *H_DR_M)
-f1.walls['front'].add_w_hole(0.2, *H_WND_M)
-f1.walls['front'].add_w_hole(0.7, *H_WND_XL)
+f1.walls['front'].add_w3_hole(f1.walls['left'], 0.3, -1, *H_WND_L)
+f1.walls['front'].add_w3_hole(f1.walls['f1d3'], 0.1, -1, *H_WND_S)
+f1.walls['front'].add_w3_hole(f1.walls['f1d0'], 0.5, 1, *H_DR_M)
+f1.walls['front'].add_w3_hole(f1.walls['f1d0'], 0.5, -1, *H_WND_M)
+f1.walls['front'].add_w3_hole(f1.walls['right'], 0.5, 1, *H_WND_XL)
+
 
 f1.walls['left'].add_d3_hole(f1.walls['f1w5'], 0.7, 1, *H_DR_M)
 f1.walls['left'].add_d3_hole(f1.walls['f1w5'], 0.2, -1, *H_WND_M)
 f1.walls['left'].add_d3_hole(f1.walls['f1w1'], 0.1, 1, *H_WND_M)
 f1.walls['left'].add_d3_hole(f1.walls['f1w1'], 0.5, -1, *H_WND_XL)
 
-f1.walls['back'].add_w_hole(0.2, *H_WND_M)
+f1.walls['back'].add_w3_hole(f1.walls['f1d0'], 0.2, -1, *H_WND_M)
 
 f1.walls['right'].add_d3_hole(f1.walls['f1w2'], 0.5, -1, *H_WND_XL)
 f1.walls['right'].add_d3_hole(f1.walls['f1w2'], 0.5, 1, *H_WND_XL)
@@ -320,7 +311,13 @@ f2.walls['f2d2'].add_d3_hole(f2.walls['f2w5'], 0, 1, 3, 10, 0)
 f2.walls['f2w3'].add_w3_hole(f2.walls['f2d2'], 0.2, 1, *H_DR_M)
 
 # render ground
-bpy_add_cube(name='ground', size=(27,54,B_E), location=(0,0,-B_E/2))
+g = bpy_add_cube(name='ground', size=(27,54,2.5), location=(0,0,1.25))
+e = bpy_add_cube(name='ground1', size=(26.9,53.9,2.5), location=(0,0,1.26))
+bpy_obj_minus_obj(g, e)
+
+p = bpy_add_cube(name='cars', size=(7, 10, 3.5), location=(8, -20, 1.75))
+e1 = bpy_add_cube(name='cars1', size=(6.8, 9.8, 3.3), location=(8, -21, 1.7))
+bpy_obj_minus_obj(p, e1)
 
 # render house
 hb = BlenderHouse(house)
