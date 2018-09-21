@@ -227,7 +227,7 @@ class BlenderHouse:
 
 # house configuration
 house = House(width=10.5+0.6, depth=12.5+0.6)
-house.add_foundation(height=0.2, shift=-2)
+house.add_foundation(height=0.2, shift=0.1)
 f1 = house.add_floor(height=3, thickness=0.6)
 house.add_overlap(height=0.2, shift=0.1)
 f2 = house.add_floor(height=3, thickness=0.6)
@@ -235,11 +235,11 @@ f2 = house.add_floor(height=3, thickness=0.6)
 IWT = 0.3
 
 f1.add_d2_wall("front", "back", 0, IWT, "f1d0")
-f1.add_w2_wall("left", "f1d0", 0.33, IWT, "f1w1")
-f1.add_w2_wall("f1d0", "right", 0.33, IWT, "f1w2")
-f1.add_d2_wall("front", "f1w1", -0.5, IWT, "f1d3")
-f1.add_w2_wall("f1d0", "right", -0.33, IWT, "f1w4")
-f1.add_w2_wall("left", "f1d3", -0.33, IWT, "f1w5")
+f1.add_w2_wall("f1d0", "right", 0.33, IWT, "f1w1")
+f1.add_w2_wall("left", "f1d0", 0.33, IWT, "f1w2")
+f1.add_d2_wall("front", "f1w1", 0.5, IWT, "f1d3")
+f1.add_w2_wall("left", "f1d0", -0.33, IWT, "f1w4")
+f1.add_w2_wall("f1d3", "right", -0.33, IWT, "f1w5")
 
 IWT = 0.3
 
@@ -251,64 +251,64 @@ H_WND_XL = (2, 1, 1)
 H_DR_M = (1, 2, 0)
 H_DR_L = (1.5, 2, 0)
 
-f1.walls['front'].add_w3_hole(f1.walls['left'], 0.3, -1, *H_WND_L)
-f1.walls['front'].add_w3_hole(f1.walls['f1d3'], 0.1, -1, *H_WND_S)
-f1.walls['front'].add_w3_hole(f1.walls['f1d0'], 0.5, 1, *H_DR_M)
-f1.walls['front'].add_w3_hole(f1.walls['f1d0'], 0.5, -1, *H_WND_M)
-f1.walls['front'].add_w3_hole(f1.walls['right'], 0.5, 1, *H_WND_XL)
+f1.walls['front'].add_w3_hole(f1.walls['right'], 0.3, 1, *H_WND_L)
+f1.walls['front'].add_w3_hole(f1.walls['f1d3'], 0.1, 1, *H_WND_S)
+f1.walls['front'].add_w3_hole(f1.walls['f1d0'], 0.5, -1, *H_DR_M)
+f1.walls['front'].add_w3_hole(f1.walls['f1d0'], 0.5, 1, *H_WND_M)
+f1.walls['front'].add_w3_hole(f1.walls['left'], 0.5, -1, *H_WND_XL)
 
 
-f1.walls['left'].add_d3_hole(f1.walls['f1w5'], 0.7, 1, *H_DR_M)
-f1.walls['left'].add_d3_hole(f1.walls['f1w5'], 0.2, -1, *H_WND_M)
-f1.walls['left'].add_d3_hole(f1.walls['f1w1'], 0.1, 1, *H_WND_M)
-f1.walls['left'].add_d3_hole(f1.walls['f1w1'], 0.5, -1, *H_WND_XL)
+f1.walls['right'].add_d3_hole(f1.walls['f1w5'], 0.7, 1, *H_DR_M)
+f1.walls['right'].add_d3_hole(f1.walls['f1w5'], 0.2, -1, *H_WND_M)
+f1.walls['right'].add_d3_hole(f1.walls['f1w1'], 0.1, 1, *H_WND_M)
+f1.walls['right'].add_d3_hole(f1.walls['f1w1'], 0.5, -1, *H_WND_XL)
 
-f1.walls['back'].add_w3_hole(f1.walls['f1d0'], 0.2, -1, *H_WND_M)
+f1.walls['back'].add_w3_hole(f1.walls['f1d0'], 0.2, 1, *H_WND_M)
 
-f1.walls['right'].add_d3_hole(f1.walls['f1w2'], 0.5, -1, *H_WND_XL)
-f1.walls['right'].add_d3_hole(f1.walls['f1w2'], 0.5, 1, *H_WND_XL)
+f1.walls['left'].add_d3_hole(f1.walls['f1w2'], 0.5, 1, *H_WND_XL)
+f1.walls['left'].add_d3_hole(f1.walls['f1w2'], 0.5, -1, *H_WND_XL)
 
 f1.walls['f1d3'].add_d3_hole(f1.walls['front'], 0.2, -1, *H_DR_M)
 f1.walls['f1d3'].add_d3_hole(f1.walls['f1w1'], 0, 1, *H_DR_L)
 f1.walls['f1d0'].add_d3_hole(f1.walls['f1w1'], 0, 1, *H_DR_L)
 f1.walls['f1d0'].add_d3_hole(f1.walls['f1w4'], 0.2, 1, *H_DR_M)
 
-f1.walls['f1w1'].add_w3_hole(f1.walls['left'], 0.2, -1, *H_DR_M)
-f1.walls['f1w4'].add_w3_hole(f1.walls['f1d0'], 0.2, -1, *H_DR_M)
-f1.walls['f1w2'].add_w3_hole(f1.walls['f1d0'], 0, -1, *H_DR_M)
-f1.walls['f1w2'].add_w3_hole(f1.walls['right'], 0.4, 1, 3, 1.5, 0.5)
+f1.walls['f1w1'].add_w3_hole(f1.walls['right'], 0.2, 1, *H_DR_M)
+f1.walls['f1w4'].add_w3_hole(f1.walls['f1d0'], 0.2, 1, *H_DR_M)
+f1.walls['f1w2'].add_w3_hole(f1.walls['f1d0'], 0, 1, *H_DR_M)
+f1.walls['f1w2'].add_w3_hole(f1.walls['left'], 0.4, -1, 3, 1.5, 0.5)
 
 f2.add_w2_wall("left", "right", 0.33, IWT, "f2w0")
 f2.add_d2_wall("f2w0", "back", 0, IWT, "f2d1")
-f2.add_d2_wall("front", "f2w0", -0.5, IWT, "f2d2")
+f2.add_d2_wall("front", "f2w0", 0.5, IWT, "f2d2")
 
 
-f2.add_w2_wall("left", "f2d2", 0.1, IWT, "f2w3")
-f2.add_w2_wall("f2d2", "right", -0.33, IWT, "f2w4")
-f2.add_w2_wall("left", "f2d2", -0.66, IWT, "f2w5")
+f2.add_w2_wall("f2d2", "right", 0.1, IWT, "f2w3")
+f2.add_w2_wall("left", "f2d2", -0.33, IWT, "f2w4")
+f2.add_w2_wall("f2d2", "right", -0.66, IWT, "f2w5")
 
 f2.add_d2_wall("front", "f2w4", 0, IWT, "f2d6")
-f2.add_w2_wall("left", "f2d2", -0.33, IWT, "f2w7")
+f2.add_w2_wall("f2d2", "right", -0.33, IWT, "f2w7")
 
-f2.walls['front'].add_w3_hole(f2.walls['f2d1'], 0.5, 1, *H_WND_XL)
 f2.walls['front'].add_w3_hole(f2.walls['f2d1'], 0.5, -1, *H_WND_XL)
+f2.walls['front'].add_w3_hole(f2.walls['f2d1'], 0.5, 1, *H_WND_XL)
 
-f2.walls['left'].add_d3_hole(f2.walls['f2w7'], 0.2, -1, *H_WND_M)
-f2.walls['left'].add_d3_hole(f2.walls['f2w7'], 0.7, 1, *H_WND_M)
-f2.walls['left'].add_d3_hole(f2.walls['f2w0'], 0.1, 1, *H_WND_M)
+f2.walls['right'].add_d3_hole(f2.walls['f2w7'], 0.2, -1, *H_WND_M)
+f2.walls['right'].add_d3_hole(f2.walls['f2w7'], 0.7, 1, *H_WND_M)
+f2.walls['right'].add_d3_hole(f2.walls['f2w0'], 0.1, 1, *H_WND_M)
+f2.walls['right'].add_d3_hole(f2.walls['f2w0'], 0.5, -1, *H_WND_XL)
+
+f2.walls['left'].add_d3_hole(f2.walls['f2w0'], 0.5, 1, *H_WND_XL)
 f2.walls['left'].add_d3_hole(f2.walls['f2w0'], 0.5, -1, *H_WND_XL)
 
-f2.walls['right'].add_d3_hole(f2.walls['f2w0'], 0.5, -1, *H_WND_XL)
-f2.walls['right'].add_d3_hole(f2.walls['f2w0'], 0.5, 1, *H_WND_XL)
-
-f2.walls['f2w0'].add_w3_hole(f2.walls['f2d1'], 0.2, 1, *H_DR_M)
 f2.walls['f2w0'].add_w3_hole(f2.walls['f2d1'], 0.2, -1, *H_DR_M)
-f2.walls['f2w4'].add_w3_hole(f2.walls['f2d6'], 0.2, -1, *H_DR_M)
-f2.walls['f2w4'].add_w3_hole(f2.walls['f2d6'], 0, 1, 3, 10, 0)
+f2.walls['f2w0'].add_w3_hole(f2.walls['f2d1'], 0.2, 1, *H_DR_M)
+f2.walls['f2w4'].add_w3_hole(f2.walls['f2d6'], 0.2, 1, *H_DR_M)
+f2.walls['f2w4'].add_w3_hole(f2.walls['f2d6'], 0, -1, 3, 10, 0)
 f2.walls['f2d2'].add_d3_hole(f2.walls['f2w0'], 0.1, 1, *H_DR_M)
 f2.walls['f2d2'].add_d3_hole(f2.walls['f2w5'], 0.2, -1, *H_DR_M)
 f2.walls['f2d2'].add_d3_hole(f2.walls['f2w5'], 0, 1, 3, 10, 0)
-f2.walls['f2w3'].add_w3_hole(f2.walls['f2d2'], 0.2, 1, *H_DR_M)
+f2.walls['f2w3'].add_w3_hole(f2.walls['f2d2'], 0.2, -1, *H_DR_M)
 
 # render ground
 g = bpy_add_cube(name='ground', size=(27,54,2.5), location=(0,0,1.25))
