@@ -1,5 +1,14 @@
 import bpy
 
+m_exwalls = bpy.data.materials.new(name="m_exwalls")
+m_exwalls.diffuse_color = (0.720, 0.800, 0.361)
+
+m_inwalls = bpy.data.materials.new(name="m_inwalls")
+m_inwalls.diffuse_color = (0.267, 0.800, 0.484)
+
+m_foundation = bpy.data.materials.new(name="m_foundation")
+m_foundation.diffuse_color = (0.142, 0.142, 0.142)
+
 class House:
 	class Foundation:
 		def __init__(self, height, shift):
@@ -169,35 +178,42 @@ class BlenderHouse:
 		self.house = house
 	
 	def render(self):
-		self.render_bounds()
 		self.render_foundation()
 		self.render_floors()
 		self.render_overlaps()
-	
-	def render_bounds(self):
-		bpy_add_cube(size=(house.width, house.depth, B_E), location=(0,0,B_E/2), name='bounds')
 	
 	def render_foundation(self):
 		if not house.foundation:
 			return
 		
-		bpy_add_cube(
+		f = bpy_add_cube(
 			size=(house.width - 2*house.foundation.shift, house.depth - 2*house.foundation.shift, house.foundation.height), 
 			location=(0,0,house.foundation.height/2), 
 			name='foundation'
 			)
+		f.data.materials.append(m_foundation)
 	
 	def render_floors(self):
 		n = 0
 		for floor in house.floors:
 			n += 1
-			f = bpy_add_cube(
+			fin = bpy_add_cube(
+				size=(1, 1, 1),
+				location=(0,0, floor.altitude+floor.height/2),
+				name='floor-walls%i' % n
+				)
+			ein = bpy_add_cube(size=(1+B_E, 1+B_E, 1+B_E), location=(0,0, floor.altitude+floor.height/2))
+			bpy_obj_minus_obj(fin, ein)
+			fin.data.materials.append(m_inwalls)
+
+			fout = bpy_add_cube(
 				size=(1, 1, 1),
 				location=(0,0, floor.altitude+floor.height/2),
 				name='floor%i' % n
 				)
-			e = bpy_add_cube(size=(1+B_E, 1+B_E, 1+B_E), location=(0,0, floor.altitude+floor.height/2))
-			bpy_obj_minus_obj(f, e)
+			eout = bpy_add_cube(size=(1+B_E, 1+B_E, 1+B_E), location=(0,0, floor.altitude+floor.height/2))
+			bpy_obj_minus_obj(fout, eout)
+			fout.data.materials.append(m_exwalls)
 			
 			for name,wall in floor.walls.items():
 				w = bpy_add_cube(
@@ -212,24 +228,28 @@ class BlenderHouse:
 						)
 					bpy_obj_minus_obj(w, h)
 				
-				bpy_obj_plus_obj(f, w)	
+				if name in ['left', 'right', 'front', 'back']:
+					bpy_obj_plus_obj(fout, w)
+				else:
+					bpy_obj_plus_obj(fin, w)	
 	
 	def render_overlaps(self):
 		n = 0
 		for overlap in house.overlaps:
 			n += 1
-			bpy_add_cube(
+			o = bpy_add_cube(
 				size=(house.width - 2*overlap.shift, house.depth - 2*overlap.shift, overlap.height),
 				location=(0,0,overlap.altitude+overlap.height/2),
 				name='overlap%i' % n
 			)
+			o.data.materials.append(m_foundation)
 
 
 # house configuration
 house = House(width=10.5+0.6, depth=12.5+0.6)
-house.add_foundation(height=0.2, shift=0.1)
+house.add_foundation(height=0.5, shift=0.1)
 f1 = house.add_floor(height=3, thickness=0.6)
-house.add_overlap(height=0.2, shift=0.1)
+house.add_overlap(height=0.3, shift=0.1)
 f2 = house.add_floor(height=3, thickness=0.6)
 
 IWT = 0.3
@@ -317,12 +337,14 @@ f2.walls['back'].add_w3_hole(f2.walls['f2d1'], 0.5, -1, *H_WND_M)
 
 #render ground
 g = bpy_add_cube(name='ground', size=(27,54,2.5), location=(0,0,1.25))
-e = bpy_add_cube(name='ground1', size=(26.9,53.9,2.5), location=(0,0,1.26))
+e = bpy_add_cube(size=(26.9,53.9,2.5), location=(0,0,1.26))
 bpy_obj_minus_obj(g, e)
 
-p = bpy_add_cube(name='cars', size=(7, 10, 3.5), location=(8, -20, 1.75))
-e1 = bpy_add_cube(name='cars1', size=(6.8, 9.8, 3.3), location=(8, -21, 1.7))
+#render cars
+p = bpy_add_cube(name='cars', size=(7, 10, 3.5), location=(8, -15, 1.75))
+e1 = bpy_add_cube(size=(6.8, 9.8, 3.3), location=(8, -16, 1.7))
 bpy_obj_minus_obj(p, e1)
+p.data.materials.append(m_exwalls)
 
 # render house
 hb = BlenderHouse(house)
