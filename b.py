@@ -1,13 +1,13 @@
 import bpy
 
 m_exwalls = bpy.data.materials.new(name="m_exwalls")
-m_exwalls.diffuse_color = (0.720, 0.800, 0.361)
+m_exwalls.diffuse_color = (0.720, 0.800, 0.361, 1.0)
 
 m_inwalls = bpy.data.materials.new(name="m_inwalls")
-m_inwalls.diffuse_color = (0.267, 0.800, 0.484)
+m_inwalls.diffuse_color = (0.267, 0.800, 0.484, 1.0)
 
 m_foundation = bpy.data.materials.new(name="m_foundation")
-m_foundation.diffuse_color = (0.142, 0.142, 0.142)
+m_foundation.diffuse_color = (0.142, 0.142, 0.142, 1.0)
 
 class House:
 	class Foundation:
@@ -157,20 +157,22 @@ def bpy_obj_minus_obj(object, deleter, delete_deleter=True):
 	mod_bool.operation = 'DIFFERENCE'
 	mod_bool.object = deleter
 	
-	bpy.context.scene.objects.active = object
-	bpy.ops.object.modifier_apply(modifier = 'modifier')
-
+	# bpy.context.scene.objects.active = object
+	bpy.context.view_layer.objects.active = object
+	bpy.ops.object.modifier_apply(modifier = mod_bool.name)
+	
 	if delete_deleter:
-		deleter.select = True
+		bpy.context.view_layer.objects.active = deleter
 		bpy.ops.object.delete()
+
 		
 def bpy_obj_plus_obj(object, addition):
 	obs = [object, addition]
-	ctx = bpy.context.copy()
-	ctx['active_object'] = obs[0]
-	ctx['selected_objects'] = obs
-	ctx['selected_editable_bases'] = [bpy.context.scene.object_bases[ob.name] for ob in obs]
-	bpy.ops.object.join(ctx)
+	c = {}
+	c['object'] = c['active_object'] = obs[0]
+	c['selected_objects'] = c['selected_editable_objects'] = obs
+	# ctx['selected_editable_bases'] = [bpy.context.scene.object_bases[ob.name] for ob in obs]
+	bpy.ops.object.join(c)
 	
 	
 class BlenderHouse:
@@ -246,27 +248,28 @@ class BlenderHouse:
 
 
 # house configuration
-house = House(width=10.5+0.6, depth=12.5+0.6)
-house.add_foundation(height=0.5, shift=0.1)
-f1 = house.add_floor(height=3, thickness=0.6)
+house = House(width=10.130, depth=12.340)
+house.add_foundation(height=0.3, shift=0.1)
+f1 = house.add_floor(height=3, thickness=0.38)
 house.add_overlap(height=0.3, shift=0.1)
-f2 = house.add_floor(height=3, thickness=0.6)
+f2 = house.add_floor(height=3, thickness=0.25)
 
-IWT = 0.3
+#6.17
+IWT = 0.38
 
 f1.add_d2_wall("front", "back", 0, IWT, "f1d0")
-f1.add_w2_wall("f1d0", "right", 0.33, IWT, "f1w1")
-f1.add_w2_wall("left", "f1d0", 0.33, IWT, "f1w2")
-f1.add_d2_wall("front", "f1w1", 0.5, IWT, "f1d3")
-f1.add_w2_wall("left", "f1d0", -0.33, IWT, "f1w4")
-f1.add_w2_wall("f1d3", "right", -0.33, IWT, "f1w5")
+f1.add_w2_wall("f1d0", "right", 0.34, IWT, "f1w1")
+f1.add_w2_wall("left", "f1d0", 0.34, IWT, "f1w2")
+f1.add_d2_wall("front", "f1w1", 0.55, IWT, "f1d3")
+f1.add_w2_wall("left", "f1d0", -0.24, IWT, "f1w4")
+f1.add_w2_wall("f1d3", "right", -0.24, IWT, "f1w5")
 
-IWT = 0.3
+IWT = 0.25
 
-H_WND_S = (0.5, 1, 1)
-H_WND_M = (1, 1, 1)
-H_WND_L = (1.5, 1, 1)
-H_WND_XL = (2, 1, 1)
+H_WND_S = (0.5, 1.5, 0.9)
+H_WND_M = (1, 1.5, 0.9)
+H_WND_L = (1.5, 1.5, 0.9)
+H_WND_XL = (2, 1.5, 0.9)
 
 H_DR_M = (1, 2, 0)
 H_DR_L = (1.5, 2, 0)
@@ -298,17 +301,17 @@ f1.walls['f1w4'].add_w3_hole(f1.walls['f1d0'], 0.2, 1, *H_DR_M)
 f1.walls['f1w2'].add_w3_hole(f1.walls['f1d0'], 0, 1, *H_DR_M)
 f1.walls['f1w2'].add_w3_hole(f1.walls['left'], 0.4, -1, 3, 1.5, 0.5)
 
-f2.add_w2_wall("left", "right", 0.33, IWT, "f2w0")
+f2.add_w2_wall("left", "right", 0.34, IWT, "f2w0")
 f2.add_d2_wall("f2w0", "back", 0, IWT, "f2d1")
-f2.add_d2_wall("front", "f2w0", 0.5, IWT, "f2d2")
+f2.add_d2_wall("front", "f2w0", 0.55, IWT, "f2d2")
 
 
 f2.add_w2_wall("f2d2", "right", 0.1, IWT, "f2w3")
-f2.add_w2_wall("left", "f2d2", -0.33, IWT, "f2w4")
+f2.add_w2_wall("left", "f2d2", -0.24, IWT, "f2w4")
 f2.add_w2_wall("f2d2", "right", -0.66, IWT, "f2w5")
 
 f2.add_d2_wall("front", "f2w4", 0, IWT, "f2d6")
-f2.add_w2_wall("f2d2", "right", -0.33, IWT, "f2w7")
+f2.add_w2_wall("f2d2", "right", -0.24, IWT, "f2w7")
 
 f2.walls['front'].add_w3_hole(f2.walls['f2d1'], 0.5, -1, *H_WND_XL)
 f2.walls['front'].add_w3_hole(f2.walls['f2d1'], 0.5, 1, *H_WND_M)
