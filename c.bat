@@ -1,0 +1,1 @@
+"E:\blender280rc1\blender-2.80rc1-windows64\blender.exe" a.blend -P c.py
