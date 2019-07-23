@@ -1,4 +1,5 @@
 import bpy
+import math
 
 class Wall:
 	def __init__(self, fv, fh, tv, th, name):
@@ -8,11 +9,16 @@ class Wall:
 		self.th = th
 		self.name = name
 		
-		print(self.size, self.location)
+		print(name, ':', self.size, self.location, self.rotation)
 	
 	@property
 	def size(self):
-		return (self.th - self.fh, self.tv - self.fv, 1)
+		len = math.sqrt((self.th - self.fh)**2+(self.tv - self.fv)**2)
+		return (len+0.1, 0.1, 1)
+		
+	@property
+	def rotation(self):
+		return (0, 0, math.atan2(self.tv - self.fv, self.th - self.fh))
 		
 	@property
 	def location(self):
@@ -38,8 +44,8 @@ class Plan:
 	
 # -----------------------------------------------------
 
-def bpy_add_cube(size, location, name=None):
-	bpy.ops.mesh.primitive_cube_add(location=location)
+def bpy_add_cube(size, rotation, location, name=None):
+	bpy.ops.mesh.primitive_cube_add(rotation=rotation, location=location)
 	bco = bpy.context.object
 	if name is not None:
 		bco.name = name
@@ -74,7 +80,7 @@ class BlenderHouse:
 		
 	def render(self):
 		for wall in self.house.walls:
-			bpy_add_cube(wall.size, wall.location, wall.name)
+			bpy_add_cube(wall.size, wall.rotation, wall.location, wall.name)
 	
 # -----------------------------------------------------		
 		
@@ -98,10 +104,26 @@ p.h['6'] = p.h['5']+2.360
 		
 h = House(p)
 
-h.add_wall('B:2', 'B:6')
-h.add_wall('B:6', 'G:6')
-h.add_wall('G:6', 'G:2')
-h.add_wall('G:2', 'B:2')
+walls = [
+	('B:2', 'B:6'),
+	('B:2', 'B:6'),
+	('B:6', 'G:6'),
+	('G:6', 'G:2'),
+	('G:2', 'B:2'),
+	('B:5', 'F:5'),
+	('F:2', 'F:6'),
+	('F:3', 'G:3'),
+	('B:3', 'D:3'),
+	('B:4', 'D:4'),
+	('D:3', 'D:4'),
+	('E:5', 'E:6'),
+	('F:4', 'G:4'),
+	('D:5', 'D:6'),
+]
+
+for w in walls:
+	h.add_wall(w[0], w[1])
+
 
 bh = BlenderHouse(h)
 bh.render()
